@@ -43,6 +43,18 @@ from config import (
 
 DEFAULT_OUTPUT_FILENAME = "Nuevas OC - Control de Ordenes de Compra ver2.xlsx"
 
+
+def _find_logo():
+    assets_dir = Path(__file__).parent / "assets"
+    for name in ("seegene_logo.png", "seegene_logo.jpg", "seegene_logo.jpeg", "seegene_logo.svg"):
+        p = assets_dir / name
+        if p.exists():
+            return p
+    return None
+
+
+LOGO_PATH = _find_logo()
+
 MASTER_FILES = [
     (FILE_CUSTOMER_MASTER, "Codigo de cliente, PIC, clasificacion, RFC"),
     (FILE_SALES_PROGRESS, "OC ya registradas + categoria de producto"),
@@ -69,14 +81,19 @@ def get_api_key():
 
 st.set_page_config(page_title="Consolidador de Nuevas OC (Cloud)", page_icon="☁️", layout="wide")
 
-st.title("☁️ Consolidador de Nuevas OC — Cloud")
-st.caption(
-    "Version en la nube disponible para todo el equipo desde este enlace. Usa el "
-    "mismo motor que la version local -- cruce automatico de codigo de cliente/"
-    "producto, verificacion de limite de credito, etc. -- con la unica diferencia "
-    "de que este servidor no tiene acceso a los archivos de tu computadora, asi "
-    "que hay que subir los archivos maestros cada vez."
-)
+header_col, logo_col = st.columns([5, 1])
+with header_col:
+    st.title("☁️ Consolidador de Nuevas OC — Cloud")
+    st.caption(
+        "Version en la nube disponible para todo el equipo desde este enlace. Usa el "
+        "mismo motor que la version local -- cruce automatico de codigo de cliente/"
+        "producto, verificacion de limite de credito, etc. -- con la unica diferencia "
+        "de que este servidor no tiene acceso a los archivos de tu computadora, asi "
+        "que hay que subir los archivos maestros cada vez."
+    )
+with logo_col:
+    if LOGO_PATH is not None:
+        st.image(str(LOGO_PATH), use_container_width=True)
 
 api_key = get_api_key()
 if not api_key:
