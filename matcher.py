@@ -406,14 +406,15 @@ class MasterData:
     def _tokenize(text):
         """Parte 'text' en candidatos a codigo: el texto completo primero
         (por si el codigo real de por si tiene guiones, ej. '49009-0104'),
-        y luego cada pedazo separado por espacios, '/', '-', ',', ';' o
+        y luego cada pedazo separado por espacios, '/', '-', ',', ';', '*' o
         parentesis (ej. 'AD-BM-CN-SD9802X' -> 'SD9802X', o una descripcion
-        larga como 'ALLPLEX STI ESSENTIALASSAY 25RX SD10245Z' -> 'SD10245Z'
+        larga como 'ALLPLEX STI ESSENTIALASSAY 25RX SD10245Z' -> 'SD10245Z',
+        o el formato de algunos clientes 'ALLPLEX GI-VIRUS *GI9701X' -> 'GI9701X'
         entre otros pedazos)."""
         if not text:
             return []
         text = str(text)
-        parts = re.split(r"[\s/,;\-()]+", text)
+        parts = re.split(r"[\s/,;\-()*]+", text)
         candidates = [text.strip()] + [p.strip() for p in parts if p.strip()]
         # Caso especial: cantidad pegada directamente al codigo sin separador
         # (ej. "100TB7200X" = cantidad "100" + codigo real "TB7200X"). Se
@@ -436,6 +437,15 @@ class MasterData:
            sobre la descripcion (ej. si el codigo es 'ALG-1063486' y no
            existe en el maestro, pero la descripcion dice '...25RX
            SD10245Z', se prueba tambien cada pedazo de la descripcion).
+        4. Si aun asi no hay match exacto, se prueba si algun pedazo es el
+           final (sufijo) de un unico codigo del maestro -- algunos clientes
+           escriben su propia OC con el codigo recortado (ej. '802X' en vez
+           de 'RP9802X'). Si el sufijo hace match con varios codigos a la
+           vez (ambiguo), se desempata comparando las palabras de la
+           descripcion del cliente contra la descripcion de cada candidato
+           en Product master list (ej. 'RESPIRATORY' en la OC prefiere el
+           candidato cuya descripcion tambien dice 'Respiratory' sobre uno
+           que diga 'GI-Bacteria'). Si sigue empatado, no se adivina.
         El criterio final es simple: la primera parte (de donde sea) que
         exista de verdad en Product master list gana. Devuelve None si nada
         hace match -- nunca inventa un codigo."""
@@ -446,4 +456,23 @@ class MasterData:
             key = _norm(candidate)
             if key and key in self.product_by_code:
                 return self.product_by_code[key]
+        for candidate in candidates:
+            key = _norm(candidate)
+            if len(key) < 4:
+                continue
+            suffix_matches = [rec for code, rec in self.product_by_code.items() if code.endswith(key)]
+            if len(suffix_matches) == 1:
+                return suffix_matches[0]
+            if len(suffix_matches) > 1 and description:
+                desc_words = set(re.findall(r"[A-Za-z]+", str(description).upper()))
+                scored = []
+                for rec in suffix_matches:
+                    rec_words = set(re.findall(r"[A-Za-z]+", str(rec.get("description") or "").upper()))
+                    overlap = len(desc_words & rec_words)
+                    if overlap:
+                        scored.append((overlap, rec))
+                if scored:
+                    scored.sort(key=lambda x: -x[0])
+                    if len(scored) == 1 or scored[0][0] > scored[1][0]:
+                        return scored[0][1]
         return None
