@@ -388,19 +388,30 @@ class MasterData:
             wb.close()
             return
         idx = _header_index(ws, PM_HEADER_ROW)
+        duplicate_codes = 0
         for row in ws.iter_rows(min_row=PM_FIRST_DATA_ROW, values_only=False):
             get = lambda col: _get(row, idx, col)
             catno = get(PM_COL_CODE)
             if catno is None:
                 continue
-            self.product_by_code[_norm(catno)] = {
+            key = _norm(catno)
+            if key in self.product_by_code:
+                # Codigo duplicado en Product master list (pasa con renglones
+                # viejos re-agregados al final de la hoja) -- se queda con la
+                # PRIMERA aparicion y se ignoran las siguientes, porque en la
+                # practica las duplicadas mas abajo suelen ser texto viejo
+                # /truncado (ej. sin "(100T)", con simbolos mal codificados).
+                duplicate_codes += 1
+                continue
+            self.product_by_code[key] = {
                 "code": catno,
                 "description": get(PM_COL_DESCRIPTION),
                 "category": get(PM_COL_CATEGORY),
             }
         wb.close()
         self.has_product_master = True
-        self.log(f"  Product master list: {len(self.product_by_code)} codigos cargados")
+        self.log(f"  Product master list: {len(self.product_by_code)} codigos cargados"
+                  + (f" ({duplicate_codes} duplicados ignorados)" if duplicate_codes else ""))
 
     @staticmethod
     def _tokenize(text):
