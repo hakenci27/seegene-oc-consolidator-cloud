@@ -462,7 +462,12 @@ class MasterData:
                 return rec
         for candidate in candidates:
             key = _norm(candidate)
-            if len(key) < 4:
+            # Se exige al menos un digito para evitar que una palabra generica
+            # de la descripcion (ej. "SEEGENE", "TUBE") haga match por
+            # casualidad con el final de un codigo real (ej. "173100-SEEGENE"
+            # es un kit de herramientas, no tiene nada que ver con la palabra
+            # "SEEGENE" que aparece en casi cualquier descripcion).
+            if len(key) < 4 or not any(ch.isdigit() for ch in key):
                 continue
             suffix_matches = [rec for code, rec in self.product_by_code.items() if code.endswith(key)]
             if len(suffix_matches) == 1:
