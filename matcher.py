@@ -508,5 +508,22 @@ class MasterData:
         if raw_code and re.fullmatch(r"\d+", str(raw_code).strip()) and description:
             m = re.search(r"\*\s*([A-Za-z][A-Za-z0-9\-]{2,})\s*$", str(description).strip())
             if m:
-                return {"code": m.group(1), "description": None, "category": None, "from_master": False}
+                parsed_code = m.group(1)
+                key = _norm(parsed_code)
+                result = {"code": parsed_code, "description": None, "category": None, "from_master": False}
+                # A veces el codigo que trae la OC del cliente tiene un
+                # pequeno error de captura frente al codigo real (ej.
+                # 'SD7700X' impreso en la OC vs 'SD7701X' real en el
+                # maestro) -- si hay un unico codigo en el maestro que
+                # difiere en un solo caracter (misma longitud), se usa su
+                # descripcion/categoria como referencia. El codigo mostrado
+                # sigue siendo el que trae la OC del cliente (no se
+                # reemplaza, porque no hay certeza de cual es el correcto).
+                if key and key not in self.product_by_code:
+                    near = [rec for code, rec in self.product_by_code.items()
+                            if len(code) == len(key) and sum(a != b for a, b in zip(code, key)) == 1]
+                    if len(near) == 1:
+                        result["description"] = near[0]["description"]
+                        result["category"] = near[0]["category"]
+                return result
         return None
