@@ -2,12 +2,12 @@
 main.py
 Orquesta el flujo completo:
   1. Carga los archivos maestros (customer master list, daily report, price list, CREDITO).
-  2. Revisa que OC de la carpeta OCs/ todavia no estan registradas
-     (ni en Sales progress.xlsx ni en el archivo de salida existente).
-  3. Extrae cada OC nueva con la API de Claude (con cache por contenido, para
-     no repetir llamadas si el archivo ya se proceso antes).
-  4. Cruza cada partida contra los archivos maestros.
-  5. Actualiza/crea el archivo de salida.
+  2. Extrae cada OC subida con la API de Claude (con cache por contenido, para
+     no repetir llamadas si el archivo ya se proceso antes). Toda OC que el
+     usuario suba se procesa -- no se filtra contra Sales progress.xlsx.
+  3. Cruza cada partida contra los archivos maestros.
+  4. Actualiza/crea el archivo de salida (builder.py evita duplicar una OC
+     que ya este en el archivo de salida por su PO No.).
 
 Se puede correr por linea de comandos (para pruebas) o ser llamado desde
 gui.py (Tkinter) o streamlit_app.py (Streamlit).
@@ -21,7 +21,7 @@ from pathlib import Path
 
 from config import OCS_SUBFOLDER, OUTPUT_FILENAME
 from extractor import extract_po, ExtractedPO, LineItem
-from matcher import MasterData, existing_po_numbers_from_sales_progress
+from matcher import MasterData
 from builder import build_or_update
 
 CACHE_FILENAME = ".oc_extraction_cache.json"
@@ -129,10 +129,6 @@ def run(folder_str, api_key, log=print, progress=None,
     for missing in master.missing_files:
         warnings.append({"type": "master_file_missing", "file": missing})
 
-    log("Revisando OC ya registradas en Sales progress.xlsx...")
-    already_recorded = existing_po_numbers_from_sales_progress(folder, log=log)
-    log(f"  {len(already_recorded)} OC ya registradas en Sales progress.xlsx")
-
     if oc_file_paths is not None:
         files = sorted(Path(p) for p in oc_file_paths)
     else:
@@ -174,12 +170,12 @@ def run(folder_str, api_key, log=print, progress=None,
     if not fake_mode:
         _save_cache(ocs_folder, cache)
 
-    log("Filtrando OC que ya estaban registradas...")
     new_pos = []
     for extracted in extracted_list:
-        if extracted.po_number.strip() in already_recorded:
-            log(f"  {extracted.po_number}: ya registrada, se omite")
-            continue
+        # No se filtra contra Sales progress.xlsx: toda OC que el usuario
+        # suba explicitamente se procesa. El unico control de duplicados es
+        # el de builder.py contra el PO No. ya presente en el archivo de
+        # salida (para no duplicar si la misma OC se vuelve a subir).
         resolved_items = []
         customer_record = master.find_customer(rfc=extracted.customer_rfc, name=extracted.customer_name)
         if customer_record:

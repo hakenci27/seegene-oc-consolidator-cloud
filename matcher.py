@@ -36,7 +36,6 @@ from config import (
     PM_SHEET, PM_HEADER_ROW, PM_FIRST_DATA_ROW,
     PM_COL_CODE, PM_COL_DESCRIPTION, PM_COL_CATEGORY,
     DISTRIBUTOR_A_LABEL, DISTRIBUTOR_B_LABEL,
-    SP_SHEET, SP_HEADER_ROW, SP_FIRST_DATA_ROW,
 )
 
 
@@ -61,27 +60,6 @@ def _optional_sheet(wb, sheet_name, filename, log, feature_desc):
             f"(hojas disponibles: {', '.join(wb.sheetnames)}) -- {feature_desc} no estara disponible.")
         return None
     return wb[sheet_name]
-
-
-def existing_po_numbers_from_sales_progress(folder, log=print):
-    """PO No. (columna D) ya registrados en Sales progress.xlsx > Purchase Order, para no duplicar."""
-    path = _optional_path(folder, FILE_SALES_PROGRESS, log, "deteccion de OC ya registradas")
-    if path is None:
-        return set()
-    wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
-    ws = _optional_sheet(wb, SP_SHEET, FILE_SALES_PROGRESS, log, "deteccion de OC ya registradas")
-    if ws is None:
-        wb.close()
-        return set()
-    numbers = set()
-    for row in ws.iter_rows(min_row=SP_FIRST_DATA_ROW, values_only=True):
-        po_no, cliente = row[3], row[5]  # columnas D y F (0-indexadas: 3 y 5)
-        if po_no is None and cliente is None:
-            break
-        if po_no is not None:
-            numbers.add(str(po_no).strip())
-    wb.close()
-    return numbers
 
 
 def _norm_header(name):
