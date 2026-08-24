@@ -118,16 +118,17 @@ CR_COL_BALANCE = "BALANCE"
 # Product master list.xlsx > "Sheet1"
 # Cruce de codigo de producto -> codigo normalizado + descripcion + categoria.
 # Cuando la OC trae un codigo combinado (ej. "187937 / SD7700X"), se separa
-# por "/" (u otros separadores) y se busca cada parte contra "Cat No" -- si
-# hay match, ese codigo/descripcion/categoria del maestro reemplaza lo
-# extraido del documento.
+# por "/" (u otros separadores) y se busca cada parte contra "Code" (columna B
+# de Product master list.xlsx) -- si hay match, ese codigo/descripcion del
+# maestro reemplaza lo extraido del documento, y la columna "Category Product"
+# de la salida se llena con el valor de "Cat Product" (columna I).
 # ---------------------------------------------------------------------------
 PM_SHEET = "Sheet1"
 PM_HEADER_ROW = 1
 PM_FIRST_DATA_ROW = 2
-PM_COL_CODE = "Cat No"
+PM_COL_CODE = "Code"
 PM_COL_DESCRIPTION = "Description"
-PM_COL_CATEGORY = "Category"
+PM_COL_CATEGORY = "Cat Product"
 
 # ---------------------------------------------------------------------------
 # Clasificaciones de cliente -> que columna de precio de distribuidor usar
