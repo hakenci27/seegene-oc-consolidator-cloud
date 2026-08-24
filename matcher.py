@@ -446,23 +446,40 @@ class MasterData:
            en Product master list (ej. 'RESPIRATORY' en la OC prefiere el
            candidato cuya descripcion tambien dice 'Respiratory' sobre uno
            que diga 'GI-Bacteria'). Si sigue empatado, no se adivina.
+        5. Si nada de lo anterior existe en el maestro (producto nuevo o
+           Product master list desactualizado), pero el "codigo" que trajo
+           el cliente es puramente numerico (o sea, probablemente solo el
+           numero de renglon de SU PROPIA orden de compra, no un codigo real
+           de Seegene -- los codigos de Seegene siempre traen letras) y la
+           descripcion trae un codigo pegado despues de un '*' al final
+           (ej. 'ANIPLEX II STI-7 *SD7700X'), se usa ese pedazo tal cual.
+           Este ultimo caso NO esta validado contra Product master list (el
+           diccionario resultante trae "from_master": False) -- se devuelve
+           igual porque mostrar el codigo real de la OC (aunque no se pueda
+           confirmar contra el maestro) es mas util que mostrar el numero de
+           renglon del cliente, pero no se rellenan Descripcion/Categoria
+           con datos inventados.
         El criterio final es simple: la primera parte (de donde sea) que
         exista de verdad en Product master list gana. Devuelve None si nada
-        hace match -- nunca inventa un codigo."""
+        hace match -- nunca inventa un codigo validado contra el maestro."""
         if not raw_code and not description:
             return None
         candidates = self._tokenize(raw_code) + self._tokenize(description)
         for candidate in candidates:
             key = _norm(candidate)
             if key and key in self.product_by_code:
-                return self.product_by_code[key]
+                rec = dict(self.product_by_code[key])
+                rec["from_master"] = True
+                return rec
         for candidate in candidates:
             key = _norm(candidate)
             if len(key) < 4:
                 continue
             suffix_matches = [rec for code, rec in self.product_by_code.items() if code.endswith(key)]
             if len(suffix_matches) == 1:
-                return suffix_matches[0]
+                rec = dict(suffix_matches[0])
+                rec["from_master"] = True
+                return rec
             if len(suffix_matches) > 1 and description:
                 desc_words = set(re.findall(r"[A-Za-z]+", str(description).upper()))
                 scored = []
@@ -474,5 +491,11 @@ class MasterData:
                 if scored:
                     scored.sort(key=lambda x: -x[0])
                     if len(scored) == 1 or scored[0][0] > scored[1][0]:
-                        return scored[0][1]
+                        rec = dict(scored[0][1])
+                        rec["from_master"] = True
+                        return rec
+        if raw_code and re.fullmatch(r"\d+", str(raw_code).strip()) and description:
+            m = re.search(r"\*\s*([A-Za-z][A-Za-z0-9\-]{2,})\s*$", str(description).strip())
+            if m:
+                return {"code": m.group(1), "description": None, "category": None, "from_master": False}
         return None

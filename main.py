@@ -205,7 +205,7 @@ def run(folder_str, api_key, log=print, progress=None,
         for item in extracted.line_items:
             # Cruce contra Product master list: si el codigo extraido (incluso
             # combinado o con guiones, ej. "AD-BM-CN-SD9802X") hace match con
-            # "Cat No" del maestro, se reemplazan codigo/descripcion/categoria
+            # "Code" del maestro, se reemplazan codigo/descripcion/categoria
             # por los del maestro. Si el codigo no da match, se busca tambien
             # dentro de la descripcion (ej. "...25RX SD10245Z").
             product_match = master.find_product(item.code, item.description)
@@ -213,6 +213,11 @@ def run(folder_str, api_key, log=print, progress=None,
                 item.code = product_match["code"]
                 item.description = product_match["description"] or item.description
                 category = product_match["category"] or master.category_for_code(item.code)
+                if not product_match.get("from_master", True):
+                    # El codigo se saco de la descripcion (ej. "...*SD7700X")
+                    # pero no esta en Product master list -- no se puede
+                    # confirmar categoria/descripcion, se marca para revision.
+                    item.code_uncertain = True
             else:
                 category = master.category_for_code(item.code)
             if item.code_uncertain:
