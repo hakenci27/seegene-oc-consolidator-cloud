@@ -24,7 +24,7 @@ from config import (
     MI_SHEET, MI_HEADER_ROW, MI_FIRST_DATA_ROW, MI_COL_CODE, MI_COL_CATEGORY,
     CM_SHEET, CM_HEADER_ROW, CM_FIRST_DATA_ROW,
     CM_COL_CUSTOMER_CODE, CM_COL_CUSTOMER_NAME, CM_COL_CLASSIFICATION,
-    CM_COL_RFC, CM_COL_PIC, CUSTOMER_NAME_ALIASES,
+    CM_COL_RFC, CM_COL_PIC, CUSTOMER_NAME_ALIASES, PRODUCT_CODE_ALIASES,
     DR_SALES_YTD_SHEET, DR_SALES_YTD_HEADER_ROW, DR_SALES_YTD_FIRST_DATA_ROW,
     DR_SYTD_COL_CUSTOMER, DR_SYTD_COL_CODE, DR_SYTD_COL_PRICE, DR_SYTD_COL_DATE,
     DR_INVENTORY_SHEET, DR_INV_HEADER_ROW, DR_INV_FIRST_DATA_ROW,
@@ -454,6 +454,18 @@ class MasterData:
         if not raw_code and not description:
             return None
         candidates = self._tokenize(raw_code) + self._tokenize(description)
+        # Alias conocidos (ver config.PRODUCT_CODE_ALIASES): codigo propio del
+        # cliente/SAP que no se parece en nada al codigo real de Seegene, ya
+        # confirmado a mano una vez -- se revisan primero para no depender de
+        # que el tokenizado/sufijo adivine algo que nunca podria adivinar.
+        for candidate in candidates:
+            alias_target = PRODUCT_CODE_ALIASES.get(_norm(candidate))
+            if alias_target:
+                rec = self.product_by_code.get(_norm(alias_target))
+                if rec:
+                    rec = dict(rec)
+                    rec["from_master"] = True
+                    return rec
         for candidate in candidates:
             key = _norm(candidate)
             if key and key in self.product_by_code:

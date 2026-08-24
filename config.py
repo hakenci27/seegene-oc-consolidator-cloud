@@ -73,6 +73,31 @@ CM_COL_PIC = "Sales Representative"
 CUSTOMER_NAME_ALIASES = {
     "DIAGNOSTICO MOLECULAR DE REFERENCIA Y SEVICIO": "DIAGNOSTICO MOLECULAR Y SERVICIO DE REFERENCIA",  # customer code 11
     "LABORATORIO DE ANALISIS CLINICOS Y CENTRO DE MAGEN SANTA MARIA SA DE CV": "LABORATORIO DE ANALISIS CLINICOS Y CENTRO DE IMAGEN SANTA MARIA",  # customer code 32
+    "GRUPO ARH LABORATORIOS": "CENTRO DE DIAGNOSTICO ARISTA",  # confirmado por el usuario, revision Mapeo Agosto 2026
+    "LABORATORIO JUAREZ S.A. DE C.V.": "LABORATORIOS JUAREZ",  # confirmado por el usuario, revision Mapeo Agosto 2026
+    "LABORATORIO TELLEZ GIRON S.A. DE C.V.": "LABORATIRIO TELLEZ GIRON",  # confirmado por el usuario, revision Mapeo Agosto 2026 -- OJO: asi esta escrito (con typo "LABORATIRIO") en customer master list.xlsx, cliente 261
+    "LABORATORIO DORADO": "MARTHA DORADO DEL RIO",  # confirmado por el usuario, revision Mapeo Agosto 2026
+    "MICHEL GUADALUPE GUTIÉRREZ LÓPEZ": "LABORATORIOS GALINDO",  # confirmado por el usuario, revision Mapeo Agosto 2026
+}
+
+# Codigos de producto tal como los escribe el cliente en su propia OC (o su
+# propio SKU/SAP interno) -> codigo real de Product master list.xlsx. Se
+# revisan en find_product() antes de intentar cualquier otra heuristica.
+# Igual que CUSTOMER_NAME_ALIASES: agregar aqui cualquier variante nueva que
+# se detecte en el futuro (ya confirmada por el usuario, no adivinada).
+PRODUCT_CODE_ALIASES = {
+    "8205949": "MG10211Z",
+    "8206260": "GI10202Z",
+    "8206323": "GI10184Z",
+    "8206324": "GI10201Z",
+    "8206325": "GI10183Z",
+    "DT0836": "GI9703X",
+    "DT0837": "GI10191X",
+    "DT0838": "MG10210Z",
+    "EX000019P": "EX00009P",
+    "EX000019T": "EX00009T",
+    "S61701": "SG1701",
+    "TB72OOX": "TB7200X",
 }
 
 # ---------------------------------------------------------------------------
