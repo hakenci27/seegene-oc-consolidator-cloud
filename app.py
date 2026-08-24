@@ -143,6 +143,19 @@ with st.sidebar:
             "Archivo existente Nuevas OC - Control...xlsx", type=["xlsx"], key="previous_output",
             label_visibility="collapsed",
         )
+        if st.session_state.get("cloud_accumulated_bytes"):
+            if previous_output is not None:
+                st.caption("ℹ️ Se usara el archivo que acabas de subir arriba (tiene prioridad).")
+            else:
+                st.caption(
+                    f"✅ Se seguira acumulando automaticamente sobre el resultado de "
+                    f"esta sesion ({st.session_state.get('cloud_session_total_added', 0)} "
+                    f"linea(s) hasta ahora)."
+                )
+            if st.button("🔄 Empezar de cero en esta sesion", use_container_width=True):
+                st.session_state["cloud_accumulated_bytes"] = None
+                st.session_state["cloud_session_total_added"] = 0
+                st.rerun()
 
     with st.container(border=True):
         st.markdown("**💾 Nombre del archivo de salida**")
@@ -155,6 +168,17 @@ with st.sidebar:
 # ---------------------------------------------------------------------------
 st.divider()
 
+if "cloud_is_running" not in st.session_state:
+    st.session_state["cloud_is_running"] = False
+if "cloud_last_run" not in st.session_state:
+    st.session_state["cloud_last_run"] = None
+if "cloud_accumulated_bytes" not in st.session_state:
+    st.session_state["cloud_accumulated_bytes"] = None
+if "cloud_session_total_added" not in st.session_state:
+    st.session_state["cloud_session_total_added"] = 0
+if "cloud_uploader_key" not in st.session_state:
+    st.session_state["cloud_uploader_key"] = 0
+
 with st.container(border=True):
     st.subheader("1️⃣ Subir Ordenes de Compra (OC) a procesar")
     uploaded_files = st.file_uploader(
@@ -162,14 +186,15 @@ with st.container(border=True):
         type=["pdf", "xlsx", "xlsm"],
         accept_multiple_files=True,
         label_visibility="collapsed",
+        key=f"oc_uploader_{st.session_state['cloud_uploader_key']}",
     )
     if uploaded_files:
         st.caption(f"{len(uploaded_files)} archivo(s) seleccionado(s)")
-
-if "cloud_is_running" not in st.session_state:
-    st.session_state["cloud_is_running"] = False
-if "cloud_last_run" not in st.session_state:
-    st.session_state["cloud_last_run"] = None
+    if st.session_state["cloud_last_run"] is not None:
+        st.caption(
+            "Puedes subir mas OC aqui y volver a darle a Ejecutar cuantas veces "
+            "quieras -- se van acumulando en el mismo archivo dentro de esta sesion."
+        )
 
 with st.container(border=True):
     st.subheader("2️⃣ Ejecutar")
@@ -193,7 +218,11 @@ with st.container(border=True):
                     (work_dir / filename).write_bytes(f.getvalue())
 
             if previous_output is not None:
-                (work_dir / output_filename).write_bytes(previous_output.getvalue())
+                seed_bytes = previous_output.getvalue()
+            else:
+                seed_bytes = st.session_state.get("cloud_accumulated_bytes")
+            if seed_bytes:
+                (work_dir / output_filename).write_bytes(seed_bytes)
 
             oc_file_paths = []
             for f in uploaded_files:
@@ -228,6 +257,7 @@ with st.container(border=True):
                 output_path = work_dir / output_filename
                 output_bytes = output_path.read_bytes() if output_path.exists() else None
                 status.update(label=f"Completado — {added} linea(s) nueva(s) agregada(s)", state="complete")
+                st.session_state["cloud_session_total_added"] += added
                 st.session_state["cloud_last_run"] = {
                     "timestamp": datetime.now().isoformat(timespec="seconds"),
                     "added": added,
@@ -237,6 +267,18 @@ with st.container(border=True):
                     "output_bytes": output_bytes,
                     "output_filename": output_filename,
                 }
+                if output_bytes:
+                    # Se guarda para que la proxima corrida en esta misma
+                    # sesion siga acumulando sobre este resultado sin que el
+                    # usuario tenga que descargar y volver a subir el
+                    # archivo manualmente en la barra lateral.
+                    st.session_state["cloud_accumulated_bytes"] = output_bytes
+                st.session_state["cloud_uploader_key"] += 1
+                st.session_state["cloud_is_running"] = False
+                if work_dir is not None:
+                    shutil.rmtree(work_dir, ignore_errors=True)
+                    work_dir = None
+                st.rerun()
             except Exception as e:
                 status.update(label="Ocurrio un error", state="error")
                 st.exception(e)
