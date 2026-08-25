@@ -59,6 +59,7 @@ CM_HEADER_ROW = 1
 CM_FIRST_DATA_ROW = 2
 CM_COL_CUSTOMER_CODE = "Customer Code"      # a veces con salto de linea en el header real
 CM_COL_CUSTOMER_NAME = "Customer name"
+CM_COL_SHORT_NAME = "Customer short name"   # ej. "CONTED" para "BLANCA LIZBETH ESPINAL PEREZ" -- muchas OC usan este nombre corto en vez de la razon social completa
 CM_COL_CLASSIFICATION = "Classification (by customer account)"
 CM_COL_RFC = "RFC"
 CM_COL_PIC = "Sales Representative"

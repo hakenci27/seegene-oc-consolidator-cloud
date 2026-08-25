@@ -23,7 +23,7 @@ from config import (
     FILE_PRICE_LIST, FILE_CREDIT_REPORT, FILE_PRODUCT_MASTER,
     MI_SHEET, MI_HEADER_ROW, MI_FIRST_DATA_ROW, MI_COL_CODE, MI_COL_CATEGORY,
     CM_SHEET, CM_HEADER_ROW, CM_FIRST_DATA_ROW,
-    CM_COL_CUSTOMER_CODE, CM_COL_CUSTOMER_NAME, CM_COL_CLASSIFICATION,
+    CM_COL_CUSTOMER_CODE, CM_COL_CUSTOMER_NAME, CM_COL_SHORT_NAME, CM_COL_CLASSIFICATION,
     CM_COL_RFC, CM_COL_PIC, CUSTOMER_NAME_ALIASES, PRODUCT_CODE_ALIASES,
     DR_SALES_YTD_SHEET, DR_SALES_YTD_HEADER_ROW, DR_SALES_YTD_FIRST_DATA_ROW,
     DR_SYTD_COL_CUSTOMER, DR_SYTD_COL_CODE, DR_SYTD_COL_PRICE, DR_SYTD_COL_DATE,
@@ -175,6 +175,7 @@ class MasterData:
             get = lambda col: _get(row, idx, col)
             rfc = _norm(get(CM_COL_RFC))
             name = _norm(get(CM_COL_CUSTOMER_NAME))
+            short_name = _norm(get(CM_COL_SHORT_NAME))
             code = get(CM_COL_CUSTOMER_CODE)
             if not name and not rfc:
                 continue
@@ -189,6 +190,15 @@ class MasterData:
                 self.customers_by_rfc[rfc] = record
             if name:
                 self.customers_by_name[name] = record
+            # El nombre corto (ej. "CONTED" para "BLANCA LIZBETH ESPINAL
+            # PEREZ") se registra tambien en customers_by_name -- muchas OC
+            # usan este nombre corto/comercial en vez de la razon social
+            # completa, y asi se aprovechan las mismas reglas de match
+            # (exacto/subcadena/palabras) sin duplicar logica. Se exige un
+            # minimo de caracteres para no registrar nombres cortos
+            # demasiado genericos que podrian dar falsos positivos.
+            if short_name and short_name != name and len(short_name) >= 4:
+                self.customers_by_name.setdefault(short_name, record)
             if code is not None:
                 self.customers_by_code[code] = record
         self.has_customer_master = True
