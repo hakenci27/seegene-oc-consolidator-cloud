@@ -179,12 +179,13 @@ class MasterData:
             code = get(CM_COL_CUSTOMER_CODE)
             if not name and not rfc:
                 continue
+            pic_raw = get(CM_COL_PIC)
             record = {
                 "customer_code": code,
                 "customer_name": get(CM_COL_CUSTOMER_NAME),
                 "classification": get(CM_COL_CLASSIFICATION),
                 "rfc": get(CM_COL_RFC),
-                "pic": get(CM_COL_PIC),
+                "pic": str(pic_raw).strip().upper() if pic_raw else pic_raw,  # PIC siempre en mayusculas en la salida
             }
             if rfc:
                 self.customers_by_rfc[rfc] = record
