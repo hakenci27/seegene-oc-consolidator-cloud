@@ -80,6 +80,20 @@ CUSTOMER_NAME_ALIASES = {
     "MICHEL GUADALUPE GUTIÉRREZ LÓPEZ": "LABORATORIOS GALINDO",  # confirmado por el usuario, revision Mapeo Agosto 2026
 }
 
+# Casos donde el nombre de cliente que se extrajo del documento en realidad
+# es "SEEGENE MEXICO..." (el vendedor, no el comprador) porque el documento
+# lo menciona de forma mas prominente que al cliente real -- CUSTOMER_NAME_ALIASES
+# no sirve aqui porque el texto extraido ("SEEGENE MEXICO...") es el mismo en
+# ambos casos pero el cliente real es distinto segun la OC. Se identifica por
+# PO No. (unico por documento) en vez de por nombre. El cliente real es quien
+# de verdad mando la orden de compra -- eso es lo que debe salir en Cliente,
+# nunca el nombre de Seegene Mexico.
+CUSTOMER_OVERRIDE_BY_PO_NUMBER = {
+    "OC006846": "LAPI",  # LAPI 6846 SEEGENE MEXICO SAPI DE CV OK.pdf -- confirmado por el usuario
+    "OC006988": "LAPI",  # LAPI 6988 SEEGENE MEXICO SAPI DE CV.pdf -- mismo patron, mismo cliente (LAPI)
+    "OC-AGOSTO26-001": "INTRAGEN",  # INTRAGEN - UNAM OC-AGOSTO26-001*.pdf -- confirmado por el usuario
+}
+
 # Codigos de producto tal como los escribe el cliente en su propia OC (o su
 # propio SKU/SAP interno) -> codigo real de Product master list.xlsx. Se
 # revisan en find_product() antes de intentar cualquier otra heuristica.

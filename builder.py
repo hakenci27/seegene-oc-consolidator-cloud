@@ -20,7 +20,7 @@ from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
-from config import OUTPUT_HEADERS, MANUAL_COLUMNS
+from config import OUTPUT_HEADERS, MANUAL_COLUMNS, CUSTOMER_OVERRIDE_BY_PO_NUMBER
 
 HEADER_ROW = 4
 FIRST_DATA_ROW = 5
@@ -158,10 +158,15 @@ def _refresh_calculated_columns(ws, first_row, last_row, master, log):
     ya fue creada (ver config.CUSTOMER_NAME_ALIASES), sin tener que volver a
     subir el documento original."""
     for r in range(first_row, last_row + 1):
+        po_number = ws.cell(row=r, column=4).value
         customer_name = ws.cell(row=r, column=6).value
         customer_code = ws.cell(row=r, column=5).value
         code = ws.cell(row=r, column=7).value
         description = ws.cell(row=r, column=8).value
+
+        override_name = CUSTOMER_OVERRIDE_BY_PO_NUMBER.get(str(po_number).strip()) if po_number else None
+        if override_name:
+            customer_name = override_name
 
         customer_record = master.find_customer(name=customer_name)
         if customer_record:

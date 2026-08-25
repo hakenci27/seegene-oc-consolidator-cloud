@@ -19,7 +19,7 @@ from dataclasses import asdict
 from datetime import date
 from pathlib import Path
 
-from config import OCS_SUBFOLDER, OUTPUT_FILENAME
+from config import OCS_SUBFOLDER, OUTPUT_FILENAME, CUSTOMER_OVERRIDE_BY_PO_NUMBER
 from extractor import extract_po, ExtractedPO, LineItem
 from matcher import MasterData
 from builder import build_or_update
@@ -177,6 +177,14 @@ def run(folder_str, api_key, log=print, progress=None,
         # el de builder.py contra el PO No. ya presente en el archivo de
         # salida (para no duplicar si la misma OC se vuelve a subir).
         resolved_items = []
+        # A veces el documento menciona a "Seegene Mexico" (el vendedor) mas
+        # prominente que al cliente real (el que de verdad mando la OC) -- en
+        # esos casos el nombre extraido queda mal sin importar el RFC, y la
+        # unica forma confiable de identificarlo es por PO No. (ver
+        # config.CUSTOMER_OVERRIDE_BY_PO_NUMBER, casos ya confirmados a mano).
+        override_name = CUSTOMER_OVERRIDE_BY_PO_NUMBER.get(extracted.po_number.strip())
+        if override_name:
+            extracted.customer_name = override_name
         customer_record = master.find_customer(rfc=extracted.customer_rfc, name=extracted.customer_name)
         if customer_record:
             customer_code = customer_record["customer_code"]
