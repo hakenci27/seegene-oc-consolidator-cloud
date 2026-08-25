@@ -78,6 +78,8 @@ CUSTOMER_NAME_ALIASES = {
     "LABORATORIO TELLEZ GIRON S.A. DE C.V.": "LABORATORIO TELLEZ GIRON",  # confirmado por el usuario, revision Mapeo Agosto 2026 -- cliente 261 (typo "LABORATIRIO" corregido en customer master list.xlsx)
     "LABORATORIO DORADO": "MARTHA DORADO DEL RIO",  # confirmado por el usuario, revision Mapeo Agosto 2026
     "MICHEL GUADALUPE GUTIÉRREZ LÓPEZ": "LABORATORIOS GALINDO",  # confirmado por el usuario, revision Mapeo Agosto 2026
+    "LABORATORIO QUIM CLINIC AZTECA": "LABORATORIO QUIMICO CLINICO AZTECA",  # customer code 37 -- abreviado en la OC (QUIM/CLINIC en vez de QUIMICO/CLINICO)
+    "BLANCA LIZBETH ESPINAL PEREZ (CONTED INNOVACIONES)": "BLANCA LIZBETH ESPINAL PEREZ",  # customer code 278 -- confirmado por el usuario como ejemplo
 }
 
 # Casos donde el nombre de cliente que se extrajo del documento en realidad
