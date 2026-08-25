@@ -197,6 +197,13 @@ class MasterData:
     def find_customer_by_code(self, customer_code):
         return self.customers_by_code.get(customer_code)
 
+    _STOPWORDS = {"DE", "DEL", "LA", "LAS", "LOS", "Y", "SA", "CV", "SC", "S", "A", "C", "V"}
+
+    @classmethod
+    def _name_tokens(cls, text):
+        words = re.findall(r"[A-Z0-9]+", _norm(text))
+        return {w for w in words if w not in cls._STOPWORDS and len(w) > 1}
+
     def find_customer(self, rfc=None, name=None):
         """Busca primero por RFC (confiable), luego por alias conocido
         (ver config.CUSTOMER_NAME_ALIASES), luego por nombre (aproximado)."""
@@ -217,6 +224,27 @@ class MasterData:
             for key, rec in self.customers_by_name.items():
                 if key in n or n in key:
                     return rec
+            # coincidencia por conjunto de palabras (sin importar el orden) --
+            # Claude no siempre extrae el nombre en el mismo orden de palabras
+            # entre una corrida y otra (ej. "Galindo Laboratorios" vs
+            # "Laboratorios Galindo"), asi que una comparacion de texto
+            # exacto o de subcadena no alcanza. Solo se acepta si hay un
+            # candidato claramente mejor que el resto (nunca se adivina entre
+            # dos igual de parecidos).
+            n_tokens = self._name_tokens(n)
+            if n_tokens:
+                scored = []
+                for key, rec in self.customers_by_name.items():
+                    key_tokens = self._name_tokens(key)
+                    if not key_tokens:
+                        continue
+                    overlap = len(n_tokens & key_tokens) / len(n_tokens | key_tokens)
+                    if overlap >= 0.6:
+                        scored.append((overlap, rec))
+                if scored:
+                    scored.sort(key=lambda x: -x[0])
+                    if len(scored) == 1 or scored[0][0] > scored[1][0]:
+                        return scored[0][1]
         return None
 
     # -- Sales_YTD (precio de referencia) ------------------------------------
