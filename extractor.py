@@ -32,7 +32,7 @@ con esta forma exacta:
 {
   "po_number": "numero o folio de la orden de compra tal como aparece",
   "po_date": "fecha de la orden en formato YYYY-MM-DD, o null si no es clara",
-  "customer_name": "nombre del cliente/comprador tal como aparece en el documento",
+  "customer_name": "nombre de la EMPRESA cliente/compradora (ver regla de abajo)",
   "customer_rfc": "RFC del cliente si aparece, o null",
   "notes": "cualquier ambiguedad relevante: fechas contradictorias, texto illegible, etc. o cadena vacia si no hay",
   "line_items": [
@@ -47,6 +47,14 @@ con esta forma exacta:
 }
 
 Reglas importantes:
+- "customer_name" SIEMPRE debe ser el nombre de la EMPRESA (laboratorio/hospital/\
+distribuidor) que compra, nunca el nombre de una persona. La forma mas confiable de \
+identificarla es el logotipo o membrete de la empresa (usualmente en una esquina del \
+encabezado) o un campo explicito tipo "Cliente"/"Empresa"/"Razon social". NO uses el \
+nombre que aparece en campos como "Solicitante", "Elaboro", "Responsable", "Aprobo", \
+"Reviso", "Atencion a" o "Contacto" -- esos son el nombre de UNA PERSONA (el empleado \
+que llena el formulario), no el de la empresa. Tampoco uses el campo "Proveedor" (ese \
+es Seegene, el vendedor, nunca el cliente).
 - Si un renglon de la tabla tiene cantidad 0 o esta vacio, NO lo incluyas.
 - Si el documento esta escaneado o manuscrito y algun codigo de producto no se lee con \
 certeza, transcribe tu mejor lectura y marca "code_uncertain": true -- nunca inventes un \
