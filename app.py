@@ -27,6 +27,7 @@ Uso local:
 Requiere ANTHROPIC_API_KEY en st.secrets (ver README.md).
 """
 
+import json
 import shutil
 import tempfile
 from datetime import datetime
@@ -195,6 +196,16 @@ with st.container(border=True):
             "Puedes subir mas OC aqui y volver a darle a Ejecutar cuantas veces "
             "quieras -- se van acumulando en el mismo archivo dentro de esta sesion."
         )
+    cached_count = st.session_state.get("cloud_extraction_cache_json")
+    if cached_count:
+        try:
+            n_cached = len(json.loads(cached_count).get("entries", {}))
+        except Exception:
+            n_cached = 0
+        st.caption(
+            f"💾 {n_cached} archivo(s) ya leidos en esta sesion -- si los vuelves a "
+            f"subir NO se le vuelve a cobrar a la API, se usa lo ya extraido."
+        )
 
 with st.container(border=True):
     st.subheader("2️⃣ Ejecutar")
@@ -212,6 +223,16 @@ with st.container(border=True):
             work_dir = Path(tempfile.mkdtemp(prefix="oc_cloud_"))
             ocs_folder = work_dir / OCS_SUBFOLDER
             ocs_folder.mkdir(parents=True, exist_ok=True)
+
+            # El cache de extraccion (por contenido/MD5, ver main.py) evita
+            # volver a pagarle a Claude por un archivo ya procesado -- pero
+            # main.run() lo guarda dentro de esta carpeta temporal, que se
+            # borra al terminar la corrida. Se restaura aqui desde la sesion
+            # (si ya se corrio algo antes en esta misma sesion) para que
+            # subir el mismo archivo dos veces en un rato no cueste doble.
+            cached_json = st.session_state.get("cloud_extraction_cache_json")
+            if cached_json:
+                (ocs_folder / oc_main.CACHE_FILENAME).write_text(cached_json, encoding="utf-8")
 
             for filename, f in master_uploads.items():
                 if f is not None:
@@ -256,6 +277,9 @@ with st.container(border=True):
                     )
                 output_path = work_dir / output_filename
                 output_bytes = output_path.read_bytes() if output_path.exists() else None
+                cache_path = ocs_folder / oc_main.CACHE_FILENAME
+                if cache_path.exists():
+                    st.session_state["cloud_extraction_cache_json"] = cache_path.read_text(encoding="utf-8")
                 status.update(label=f"Completado — {added} linea(s) nueva(s) agregada(s)", state="complete")
                 st.session_state["cloud_session_total_added"] += added
                 st.session_state["cloud_last_run"] = {
