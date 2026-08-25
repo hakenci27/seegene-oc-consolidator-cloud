@@ -96,12 +96,28 @@ with logo_col:
     if LOGO_PATH is not None:
         st.image(str(LOGO_PATH), use_container_width=True)
 
+with st.sidebar:
+    st.markdown("## ⚙️ Configuracion")
+    fake_mode = st.checkbox(
+        "🧪 Modo de prueba (sin API, datos ficticios)",
+        value=False,
+        help=(
+            "No llama a Claude ni cuesta nada -- genera una OC ficticia por cada "
+            "archivo subido, marcada claramente como datos de prueba, para probar "
+            "el flujo completo (subida, cruce con maestros, descarga del Excel) "
+            "sin gastar API."
+        ),
+    )
+    if fake_mode:
+        st.caption("🧪 Modo de prueba activo -- los datos de las OC seran ficticios.")
+
 api_key = get_api_key()
-if not api_key:
+if not api_key and not fake_mode:
     st.error(
         "No se ha configurado la API key de Claude. Agrega `ANTHROPIC_API_KEY` en "
         "`.streamlit/secrets.toml` (local) o en Settings > Secrets de Streamlit "
-        "Cloud (ver README.md)."
+        "Cloud (ver README.md). O activa el modo de prueba en la barra lateral "
+        "para probar el flujo sin API key."
     )
     st.stop()
 
@@ -109,8 +125,6 @@ if not api_key:
 # Barra lateral: subir archivos maestros + configuracion
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("## ⚙️ Configuracion")
-
     with st.container(border=True):
         st.markdown("**🗂️ Archivos maestros**")
         st.caption(
@@ -274,6 +288,7 @@ with st.container(border=True):
                         oc_file_paths=oc_file_paths,
                         output_filename=output_filename,
                         warnings=warnings,
+                        fake_mode=fake_mode,
                     )
                 output_path = work_dir / output_filename
                 output_bytes = output_path.read_bytes() if output_path.exists() else None
