@@ -75,6 +75,7 @@ CUSTOMER_NAME_ALIASES = {
     "DIAGNOSTICO MOLECULAR DE REFERENCIA Y SEVICIO": "DIAGNOSTICO MOLECULAR Y SERVICIO DE REFERENCIA",  # customer code 11
     "LABORATORIO DE ANALISIS CLINICOS Y CENTRO DE MAGEN SANTA MARIA SA DE CV": "LABORATORIO DE ANALISIS CLINICOS Y CENTRO DE IMAGEN SANTA MARIA",  # customer code 32
     "GRUPO ARH LABORATORIOS": "CENTRO DE DIAGNOSTICO ARISTA",  # confirmado por el usuario, revision Mapeo Agosto 2026
+    "ARH LABORATORIOS": "CENTRO DE DIAGNOSTICO ARISTA",  # mismo cliente, sin el prefijo "GRUPO" que a veces omite la IA
     "LABORATORIO JUAREZ S.A. DE C.V.": "LABORATORIOS JUAREZ",  # confirmado por el usuario, revision Mapeo Agosto 2026
     "LABORATORIO TELLEZ GIRON S.A. DE C.V.": "LABORATORIO TELLEZ GIRON",  # confirmado por el usuario, revision Mapeo Agosto 2026 -- cliente 261 (typo "LABORATIRIO" corregido en customer master list.xlsx)
     "LABORATORIO DORADO": "MARTHA DORADO DEL RIO",  # confirmado por el usuario, revision Mapeo Agosto 2026
