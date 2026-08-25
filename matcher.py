@@ -331,6 +331,34 @@ class MasterData:
         classification = "< 6 meses" if months < 6 else ">= 6 meses"
         return total, classification, exp_date
 
+    def inventory_units_by_expiration(self, code, today=None):
+        """Para un codigo de producto, suma las unidades (MX Final Inventory) de
+        cada lote segun su distancia de caducidad:
+        - units_ge_6m: lotes con caducidad >= 6 meses desde hoy
+        - units_le_3m: lotes con caducidad <= 3 meses desde hoy
+        Los lotes sin fecha de caducidad valida o con qty <= 0 se ignoran.
+        Devuelve (None, None) si el codigo no esta en Inventory."""
+        today = today or date.today()
+        lots = self.inventory.get(_norm(code))
+        if not lots:
+            return None, None
+        units_ge_6m = 0
+        units_le_3m = 0
+        for lot in lots:
+            qty = lot["mx_final"]
+            if not qty or qty <= 0:
+                continue
+            exp = lot["expiration"]
+            if not isinstance(exp, (date, datetime)):
+                continue
+            exp_date = exp.date() if isinstance(exp, datetime) else exp
+            months = (exp_date.year - today.year) * 12 + (exp_date.month - today.month) - (1 if exp_date.day < today.day else 0)
+            if months >= 6:
+                units_ge_6m += qty
+            if months <= 3:
+                units_le_3m += qty
+        return units_ge_6m, units_le_3m
+
     # -- Official price list ---------------------------------------------------
     def _load_price_list(self, folder):
         self.price_list = {}

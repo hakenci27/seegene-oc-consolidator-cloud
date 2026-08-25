@@ -32,11 +32,12 @@ OUTPUT_HEADERS_BASE = [
     "Back order", "Amount", "Categoria", "Mes de facturacion",
     "Inventario Actual", "Comments  (SCM)", "Status ", "Quarter", "Semester", "Year",
 ]
-# Columnas extendidas agregadas para este flujo (V..AB)
+# Columnas extendidas agregadas para este flujo (V..AD)
 OUTPUT_HEADERS_EXT = [
     "Precio coincide", "Lista de precio", "Limite de Credito (Balance)",
     "Dentro de Limite", "Inv Disponible (MX Final Inventory)",
     "Caducidad < 6M", "Fecha de Caducidad mas proxima",
+    "Inv >= 6M (unidades)", "Inv <= 3M (unidades)",
 ]
 OUTPUT_HEADERS = OUTPUT_HEADERS_BASE + OUTPUT_HEADERS_EXT
 

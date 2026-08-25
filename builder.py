@@ -246,7 +246,16 @@ def _refresh_calculated_columns(ws, first_row, last_row, master, log):
         elif classification_exp == ">= 6 meses":
             aa_cell.fill, aa_cell.font = GREEN_FILL, GREEN_FONT
 
-        for col in (22, 23, 24, 25, 26, 27, 28):
+        # AC, AD: unidades por tramo de caducidad (por lote individual de Inventory)
+        units_ge_6m, units_le_3m = master.inventory_units_by_expiration(code)
+        if units_ge_6m is None:
+            ws.cell(row=r, column=29, value="N/D")
+            ws.cell(row=r, column=30, value="N/D")
+        else:
+            ws.cell(row=r, column=29, value=units_ge_6m)
+            ws.cell(row=r, column=30, value=units_le_3m)
+
+        for col in (22, 23, 24, 25, 26, 27, 28, 29, 30):
             cell = ws.cell(row=r, column=col)
             if col != 27 or cell.value not in ("< 6 meses", ">= 6 meses"):
                 # no pisar el font rojo/verde que ya se puso arriba para AA
@@ -276,7 +285,7 @@ def _apply_total_row(ws, last_row):
 
 
 def _apply_autofilter_and_conditional_formatting(ws, last_row):
-    ws.auto_filter.ref = f"A{HEADER_ROW}:AB{last_row}"
+    ws.auto_filter.ref = f"A{HEADER_ROW}:AD{last_row}"
     for col_letter in ("V", "Y"):
         rng = f"{col_letter}{FIRST_DATA_ROW}:{col_letter}{last_row}"
         ws.conditional_formatting.add(
@@ -286,6 +295,6 @@ def _apply_autofilter_and_conditional_formatting(ws, last_row):
             rng, CellIsRule(operator="equal", formula=['"YES"'], fill=GREEN_FILL, font=GREEN_FONT)
         )
     widths = [10, 12, 14, 16, 14, 40, 16, 40, 20, 9, 13, 12, 13, 14, 16, 24, 46, 12, 10, 10, 8,
-              16, 16, 20, 14, 24, 16, 20]
+              16, 16, 20, 14, 24, 16, 20, 18, 18]
     for i, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
